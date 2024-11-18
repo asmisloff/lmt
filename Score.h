@@ -15,9 +15,9 @@ struct Score {
     } else if (mistake_cnt >= 1) {
       mark = "4";
     }
-    if (mistake_cnt > 0) {
-      std::cout << mistake_cnt << " неправильных ответов\n";
-    }
-    std::cout << "Оценка: " << mark << std::endl;
+    std::cout << "\tScore\n"
+              << "\tCorrect answers: " << correct_ans_cnt << '\n'
+              << "\tWrong answers: " << mistake_cnt << '\n'
+              << "\tMark: " << mark << std::endl;
   }
 };

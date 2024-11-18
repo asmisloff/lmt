@@ -15,9 +15,9 @@ size_t skip_spaces(std::string &str, size_t idx) {
   return idx;
 }
 
-constexpr const char *NOT_A_NUMBER_MSG = "Не число";
-constexpr const char *OUT_OF_RANGE_MSG = "Слишком большое число";
-constexpr const char *REPEAT_EX = "Еще раз тот же пример";
+constexpr const char *NOT_A_NUMBER_MSG = "Not a number";
+constexpr const char *OUT_OF_RANGE_MSG = "Too big number";
+constexpr const char *REPEAT_EX = "Repeat";
 
 int read_int() {
   std::string input;
@@ -33,13 +33,13 @@ int read_int() {
 }
 
 bool ask(int base, int mul, int number, int qty, int *ans) {
-  std::cout << number << " / " << qty << ": " << base << " x " << mul << " = ";
+  std::cout << number << " of " << qty << ":    " << base << " x " << mul << " = ";
   try {
     *ans = read_int();
-  } catch (std::invalid_argument e) {
+  } catch (const std::invalid_argument &e) {
     std::cout << NOT_A_NUMBER_MSG << ". " << REPEAT_EX << ".\n";
     return false;
-  } catch (std::out_of_range e) {
+  } catch (const std::out_of_range &e) {
     std::cout << OUT_OF_RANGE_MSG << ". " << REPEAT_EX << ".\n";
     return false;
   }
@@ -47,30 +47,34 @@ bool ask(int base, int mul, int number, int qty, int *ans) {
 }
 
 int main() {
-  int base = 4;
-  int times = 0;
   system("clear");
-  std::cout << "На сколько: ";
-  std::cin >> base;
+  int base, times;
+  try {
+    std::cout << "Base number: ";
+    base = read_int();
+    std::cout << "Number of exercises: ";
+    times = read_int();
+  } catch (const std::exception &e) {
+    std::cout << "Error: bad number" << '\n';
+    return -1;
+  }
   system("clear");
-  std::cout << "Сколько примеров: ";
-  std::cin >> times;
   RandomSequence random(times);
   int ans = 0;
   Score score;
   for (int i = 0; i < times; ++i) {
     int mul = random.next();
     int correct_ans = base * mul;
-    system("clear");
     bool parsed = ask(base, mul, i + 1, times, &ans);
     while (!parsed || ans != correct_ans) {
       if (parsed) {
-        std::cout << "Неверно. " << REPEAT_EX << ".\n";
+        std::cout << "Wrong, repeat.\n";
         score.mistake_cnt++;
       }
       parsed = ask(base, mul, i + 1, times, &ans);
     }
-    std::cout << "Правильно\n";
+    std::cout << "Correct!\n";
+    ++score.correct_ans_cnt;
   }
   score.print();
 }
