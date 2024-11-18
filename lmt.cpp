@@ -48,7 +48,8 @@ bool ask(int base, int mul, int number, int qty, int *ans) {
 
 int main() {
   system("clear");
-  int base, times;
+  int base = 0;
+  int times = 0;
   try {
     std::cout << "Base number: ";
     base = read_int();
@@ -73,7 +74,7 @@ int main() {
       }
       parsed = ask(base, mul, i + 1, times, &ans);
     }
-    std::cout << "Correct!\n";
+    system("clear");
     ++score.correct_ans_cnt;
   }
   score.print();
