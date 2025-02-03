@@ -1,23 +1,29 @@
 #include <iostream>
+#include <map>
 #include <string>
+#include <vector>
 
 struct Score {
   
-  int mistake_cnt = 0;
-  int correct_ans_cnt = 0;
+  unsigned int mistake_cnt = 0;
+  unsigned int correct_ans_cnt = 0;
+  unsigned int amending_cnt = 0;
 
   void print() const {
-    std::string mark("5");
-    if (mistake_cnt > 3) {
-      mark = "2";
-    } else if (mistake_cnt > 2) {
-      mark = "3";
-    } else if (mistake_cnt >= 1) {
-      mark = "4";
+    std::string mark = mistake_cnt > marks.size()
+      ? "1-"
+      : marks[mistake_cnt];
+    if (amending_cnt > 0 && mark.back() != '-') {
+      mark += '-';
     }
-    std::cout << "Score\n"
-              << "Correct answers: " << correct_ans_cnt << '\n'
-              << "Wrong answers: " << mistake_cnt << '\n'
-              << "Mark: " << mark << std::endl;
+    std::cout << "Всего примеров: " << correct_ans_cnt << "\n"
+              << "Неверных ответов: " << mistake_cnt << "\n"
+              << "Исправлений: " << amending_cnt << "\n"
+              << "Оценка: " << mark << "\n";
   }
+
+  private:
+  std::vector<std::string> marks = {
+    "5", "5-", "4", "3", "3", "2", "2-", "1", "1-"
+  };
 };

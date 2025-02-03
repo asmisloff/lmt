@@ -1,2 +1,2 @@
-all: lmt.cpp RandomSequence.cpp
-	g++ lmt.cpp RandomSequence.cpp -o lmt -O0 -Wall -Wextra
+all: lmt.cpp RandomPairs.cpp
+	g++ lmt.cpp RandomPairs.cpp -o lmt -O0 -Wall -Wextra

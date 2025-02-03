@@ -4,8 +4,9 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
-#include "RandomSequence.h"
+#include "RandomPairs.h"
 #include "Score.h"
 
 size_t skip_spaces(std::string &str, size_t idx) {
@@ -15,9 +16,9 @@ size_t skip_spaces(std::string &str, size_t idx) {
   return idx;
 }
 
-constexpr const char *NOT_A_NUMBER_MSG = "Not a number";
-constexpr const char *OUT_OF_RANGE_MSG = "Too big number";
-constexpr const char *REPEAT_EX = "Repeat";
+constexpr const char *NOT_A_NUMBER_MSG = "Не число";
+constexpr const char *OUT_OF_RANGE_MSG = "Слишком большое число";
+constexpr const char *REPEAT_EX = "Еще раз";
 
 int read_int() {
   std::string input;
@@ -33,7 +34,7 @@ int read_int() {
 }
 
 bool ask(int base, int mul, int number, int qty, int *ans) {
-  std::cout << number << " of " << qty << ":    " << base << " x " << mul << " = ";
+  std::cout << number << " из " << qty << ":    " << base << " x " << mul << " = ";
   try {
     *ans = read_int();
   } catch (const std::invalid_argument &e) {
@@ -48,31 +49,41 @@ bool ask(int base, int mul, int number, int qty, int *ans) {
 
 int main() {
   system("clear");
-  int base = 0;
-  int times = 0;
-  try {
-    std::cout << "Base number: ";
-    base = read_int();
-    std::cout << "Number of exercises: ";
-    times = read_int();
-  } catch (const std::exception &e) {
-    std::cout << "Error: bad number" << '\n';
-    return -1;
+  RandomPairs randomPairs;
+  while (1) {
+    try {
+      std::cout << "На какое число: ";
+      int base = read_int();
+      if (base == 0) {
+        break;
+      }
+      std::cout << "Количество примеров: ";
+      int times = read_int();
+      randomPairs.addBase(base, times);
+    } catch (const std::exception &e) {
+      std::cout << "Ошибка: неправильное число" << '\n';
+      return -1;
+    }
   }
   system("clear");
-  RandomSequence random(times);
   int ans = 0;
   Score score;
-  for (int i = 0; i < times; ++i) {
-    int mul = random.next();
+  randomPairs.shuffle();
+  int qty = randomPairs.size();
+  for (int i = 1; randomPairs.hasNext(); ++i) {
+    auto numbers = randomPairs.next();
+    int base = numbers.first;
+    int mul = numbers.second;
     int correct_ans = base * mul;
-    bool parsed = ask(base, mul, i + 1, times, &ans);
+    bool parsed = ask(base, mul, i + 1, qty, &ans);
     while (!parsed || ans != correct_ans) {
       if (parsed) {
-        std::cout << "Wrong, repeat.\n";
+        std::cout << "Неверно, еще попытка.\n";
         score.mistake_cnt++;
+      } else {
+        ++score.amending_cnt;
       }
-      parsed = ask(base, mul, i + 1, times, &ans);
+      parsed = ask(base, mul, i + 1, qty, &ans);
     }
     system("clear");
     ++score.correct_ans_cnt;
