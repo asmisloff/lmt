@@ -1,13 +1,11 @@
 #include <cctype>
-#include <cstddef>
-#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <utility>
 
 #include "RandomPairs.h"
 #include "Score.h"
+#include "Timer.h"
 
 size_t skip_spaces(std::string &str, size_t idx) {
   while (std::isspace(str[idx]) != 0) {
@@ -16,13 +14,30 @@ size_t skip_spaces(std::string &str, size_t idx) {
   return idx;
 }
 
+static bool treat_new_line_as_zero = false;
 constexpr const char *NOT_A_NUMBER_MSG = "Не число";
 constexpr const char *OUT_OF_RANGE_MSG = "Слишком большое число";
 constexpr const char *REPEAT_EX = "Еще раз";
 
+bool is_blank(const std::string &str) {
+  for (auto c : str) {
+    if (std::isspace(c) == 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
 int read_int() {
   std::string input;
-  std::cin >> input;
+  std::getline(std::cin, input);
+  while (is_blank(input)) {
+    if (treat_new_line_as_zero && is_blank(input)) {
+      treat_new_line_as_zero = false;
+      return 0;
+    }
+    std::getline(std::cin, input);
+  }
   size_t idx = 0;
   int val = std::stoi(input, &idx);
   while (idx < input.size()) {
@@ -33,7 +48,7 @@ int read_int() {
   return val;
 }
 
-bool ask(int base, int mul, int number, int qty, int *ans) {
+bool ask(const int base, const int mul, const int number, const int qty, int *ans) {
   std::cout << number << " из " << qty << ":    " << base << " x " << mul << " = ";
   try {
     *ans = read_int();
@@ -50,10 +65,14 @@ bool ask(int base, int mul, int number, int qty, int *ans) {
 int main() {
   system("clear");
   RandomPairs randomPairs;
+  Timer timer;
   while (1) {
     try {
       std::cout << "На какое число: ";
       int base = read_int();
+      if (base < 0) {
+        throw std::invalid_argument("Нельзя вводить отрицательные числа");
+      }
       if (base == 0) {
         break;
       }
@@ -61,7 +80,7 @@ int main() {
       int times = read_int();
       randomPairs.addBase(base, times);
     } catch (const std::exception &e) {
-      std::cout << "Ошибка: неправильное число" << '\n';
+      std::cout << (e.what() != nullptr ? e.what() : "Ошибка: неправильное число") << '\n';
       return -1;
     }
   }
@@ -75,18 +94,27 @@ int main() {
     int base = numbers.first;
     int mul = numbers.second;
     int correct_ans = base * mul;
-    bool parsed = ask(base, mul, i + 1, qty, &ans);
-    while (!parsed || ans != correct_ans) {
+    timer.count(5000, [] {
+      std::cout << "Время вышло, для продолжения нажмите Enter.\n";
+      treat_new_line_as_zero = true;
+    });
+    bool parsed = ask(base, mul, i, qty, &ans);
+    while (timer.left() >= 0 && (!parsed || ans != correct_ans)) {
       if (parsed) {
         std::cout << "Неверно, еще попытка.\n";
         score.mistake_cnt++;
       } else {
         ++score.amending_cnt;
       }
-      parsed = ask(base, mul, i + 1, qty, &ans);
+      parsed = ask(base, mul, i, qty, &ans);
     }
-    system("clear");
-    ++score.correct_ans_cnt;
+    std::system("clear");
+    if (timer.left() >= 0) {
+      ++score.correct_ans_cnt;
+    } else {
+      ++score.mistake_cnt;
+    }
   }
   score.print();
+  timer.halt();
 }
