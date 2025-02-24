@@ -1,59 +1,26 @@
 #include <cctype>
 #include <iostream>
 #include <stdexcept>
-#include <string>
 
 #include "RandomPairs.h"
+#include "Reader.h"
 #include "Score.h"
 #include "Timer.h"
 
-size_t skip_spaces(std::string &str, size_t idx) {
-  while (std::isspace(str[idx]) != 0) {
-    ++idx;
-  }
-  return idx;
-}
-
-static bool treat_new_line_as_zero = false;
-constexpr const char *NOT_A_NUMBER_MSG = "Не число";
-constexpr const char *OUT_OF_RANGE_MSG = "Слишком большое число";
 constexpr const char *REPEAT_EX = "Еще раз";
+constexpr const char *OUT_OF_RANGE_MSG = "Слишком большое число";
 
-bool is_blank(const std::string &str) {
-  for (auto c : str) {
-    if (std::isspace(c) == 0) {
-      return false;
-    }
-  }
-  return true;
-}
-
-int read_int() {
-  std::string input;
-  std::getline(std::cin, input);
-  while (is_blank(input)) {
-    if (treat_new_line_as_zero && is_blank(input)) {
-      treat_new_line_as_zero = false;
-      return 0;
-    }
-    std::getline(std::cin, input);
-  }
-  size_t idx = 0;
-  int val = std::stoi(input, &idx);
-  while (idx < input.size()) {
-    if (std::isspace(input[idx]) == 0) {
-      throw std::invalid_argument(NOT_A_NUMBER_MSG);
-    }
-  }
-  return val;
-}
+static Reader reader;
+static RandomPairs random_pairs;
+static Timer timer;
+static Score score;
 
 bool ask(const int base, const int mul, const int number, const int qty, int *ans) {
   std::cout << number << " из " << qty << ":    " << base << " x " << mul << " = ";
   try {
-    *ans = read_int();
+    *ans = reader.read_int();
   } catch (const std::invalid_argument &e) {
-    std::cout << NOT_A_NUMBER_MSG << ". " << REPEAT_EX << ".\n";
+    std::cout << e.what() << ". " << REPEAT_EX << ".\n";
     return false;
   } catch (const std::out_of_range &e) {
     std::cout << OUT_OF_RANGE_MSG << ". " << REPEAT_EX << ".\n";
@@ -62,42 +29,50 @@ bool ask(const int base, const int mul, const int number, const int qty, int *an
   return true;
 }
 
+bool non_negative(int val) {
+  return val >= 0;
+}
+
+bool positive(int val) {
+  return val > 0;
+}
+
+bool add_base() {
+  int base;
+  int times;
+  do {
+    std::cin.clear();
+    std::cout << "На какое число (0 для продолжения): ";
+  } while (!reader.try_read_int(&base, non_negative));
+  if (base == 0) {
+    return false;
+  }
+  do {
+    std::cin.clear();
+    std::cout << "Количество примеров: ";
+  } while (!reader.try_read_int(&times, positive));
+  random_pairs.addBase(base, times);
+  return true;
+}
+
+void on_expire() {
+  std::cout << "Время вышло, для продолжения нажмите Enter.\n";
+  reader.new_line_is_zero(true);
+}
+
 int main() {
   system("clear");
-  RandomPairs randomPairs;
-  Timer timer;
-  while (1) {
-    try {
-      std::cout << "На какое число: ";
-      int base = read_int();
-      if (base < 0) {
-        throw std::invalid_argument("Нельзя вводить отрицательные числа");
-      }
-      if (base == 0) {
-        break;
-      }
-      std::cout << "Количество примеров: ";
-      int times = read_int();
-      randomPairs.addBase(base, times);
-    } catch (const std::exception &e) {
-      std::cout << (e.what() != nullptr ? e.what() : "Ошибка: неправильное число") << '\n';
-      return -1;
-    }
+  while (add_base()) {
   }
   system("clear");
   int ans = 0;
-  Score score;
-  randomPairs.shuffle();
-  int qty = randomPairs.size();
-  for (int i = 1; randomPairs.hasNext(); ++i) {
-    auto numbers = randomPairs.next();
+  int qty = random_pairs.size();
+  for (int i = 1; random_pairs.hasNext(); ++i) {
+    auto numbers = random_pairs.next();
     int base = numbers.first;
     int mul = numbers.second;
     int correct_ans = base * mul;
-    timer.count(5000, [] {
-      std::cout << "Время вышло, для продолжения нажмите Enter.\n";
-      treat_new_line_as_zero = true;
-    });
+    timer.count(5000, on_expire);
     bool parsed = ask(base, mul, i, qty, &ans);
     while (timer.left() >= 0 && (!parsed || ans != correct_ans)) {
       if (parsed) {
