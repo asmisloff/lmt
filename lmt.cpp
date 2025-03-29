@@ -67,12 +67,13 @@ int main() {
   system("clear");
   int ans = 0;
   int qty = random_pairs.size();
+  random_pairs.shuffle();
   for (int i = 1; random_pairs.hasNext(); ++i) {
     auto numbers = random_pairs.next();
     int base = numbers.first;
     int mul = numbers.second;
     int correct_ans = base * mul;
-    timer.count(5000, on_expire);
+    timer.count(10000, on_expire);
     bool parsed = ask(base, mul, i, qty, &ans);
     while (timer.left() >= 0 && (!parsed || ans != correct_ans)) {
       if (parsed) {

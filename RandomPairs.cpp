@@ -20,7 +20,7 @@ void RandomPairs::addBase(int base, int cnt) {
   while (cnt-- > 0) {
     bases.push_back(base);
     multipliers.push_back(m++);
-    if (m == 10) {
+    if (m >= 10) {
       m = 1;
     }
   }
